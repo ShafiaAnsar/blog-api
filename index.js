@@ -1,17 +1,32 @@
 const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
+const User = require("./models/User")
 const app = express();
 const connectdb= require("./db")
 
 app.use(cors());
 app.use(express.json());
 
-app.post('/register',(req,res)=>{
+app.post('/register', async(req,res)=>{
     const {username,email,password} = req.body
     console.log('Received registration request:', req.body);
-
-    res.status(200).json({ requestData:{username,email,password} });
+ try {
+    const user=  await User.create({
+        username,
+        email,
+        password
+    })
+    res.status(200).json(user);
+ } catch (error) {
+    if (error.code === 11000) {
+        // Unique constraint violation
+        const duplicateField = Object.keys(error.keyValue)[0];
+        res.status(400).json({ error: `This ${duplicateField} is already taken.` });
+      } else {
+        res.status(500).json({ error: 'An error occurred during registration.' });
+      }
+    }
 
 })
 connectdb()
