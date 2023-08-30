@@ -1,10 +1,13 @@
 const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
+const bcrypt =require('bcryptjs')
 const User = require("./models/User")
 const app = express();
 const connectdb= require("./db")
 
+
+const salt = bcrypt.genSaltSync(10)
 app.use(cors());
 app.use(express.json());
 
@@ -15,7 +18,7 @@ app.post('/register', async(req,res)=>{
     const user=  await User.create({
         username,
         email,
-        password
+        password:bcrypt.hashSync(password,salt)
     })
     res.status(200).json(user);
  } catch (error) {
@@ -28,6 +31,11 @@ app.post('/register', async(req,res)=>{
       }
     }
 
+})
+app.post('/login',async(req,res)=>{
+  const {username,password} = req.body
+    console.log('Received registration request:', req.body)
+    const user = User.findOne({username})
 })
 connectdb()
 app.listen(4000,()=>{
