@@ -55,6 +55,7 @@ app.post('/login', async (req, res) => {
         if(err){
           throw new Error(err)
         }
+        // setUserName(username);
         res.cookie('token',token).json("ok")
     })
   } 
@@ -78,6 +79,7 @@ app.get('/profile', (req,res) => {
 app.post('/logout', (req,res) => {
   res.cookie('token', '').json('ok');
 });
+
 connectdb()
 app.listen(4000,()=>{
     console.log('App is running at port 4000')
