@@ -56,7 +56,10 @@ app.post('/login', async (req, res) => {
           throw new Error(err)
         }
         // setUserName(username);
-        res.cookie('token',token).json("ok")
+        res.cookie('token',token).json({
+          id:user._id,
+          username,
+        })
     })
   } 
   else {
