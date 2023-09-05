@@ -7,6 +7,8 @@ const User = require("./models/User")
 const app = express();
 const connectdb= require("./db")
 const cookieParser = require('cookie-parser')
+const multer = require('multer')
+const  uploadMiddleware = multer({dest:'uploads/'})
 
 const salt = bcrypt.genSaltSync(10)
 const secret ='jf803u4dj02948jkfaalrla'
@@ -82,7 +84,9 @@ app.get('/profile', (req,res) => {
 app.post('/logout', (req,res) => {
   res.cookie('token', '').json('ok');
 });
-
+app.post('/post',uploadMiddleware.single('file'),(req,res)=>{
+  res.json(req.files)
+})
 connectdb()
 app.listen(4000,()=>{
     console.log('App is running at port 4000')
