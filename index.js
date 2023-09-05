@@ -4,6 +4,7 @@ require('dotenv').config();
 const bcrypt =require('bcryptjs')
 const jwt = require("jsonwebtoken")
 const User = require("./models/User")
+const Post = require('./models/Post')
 const app = express();
 const connectdb= require("./db")
 const cookieParser = require('cookie-parser')
@@ -84,12 +85,21 @@ app.get('/profile', (req,res) => {
 app.post('/logout', (req,res) => {
   res.cookie('token', '').json('ok');
 });
-app.post('/post',uploadMiddleware.single('file'),(req,res)=>{
+app.post('/post',uploadMiddleware.single('file'),async(req,res)=>{
   const {originalname,path} = req.file
   const parts = originalname.split('.')
   const extension = parts[parts.length-1]
-  fs.renameSync(path,path+"."+extension)
-  res.json({extension})
+  const newPath = path+"."+extension
+  fs.renameSync(path,newPath)
+
+  const {title,summary,content} = req.body
+ const post = await Post.create({
+  title,
+  summary,
+  content,
+  cover:newPath
+ })
+  res.json([post])
 })
 connectdb()
 app.listen(4000,()=>{
