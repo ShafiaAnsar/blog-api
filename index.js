@@ -9,7 +9,7 @@ const connectdb= require("./db")
 const cookieParser = require('cookie-parser')
 const multer = require('multer')
 const  uploadMiddleware = multer({dest:'uploads/'})
-
+const fs = require('fs')
 const salt = bcrypt.genSaltSync(10)
 const secret ='jf803u4dj02948jkfaalrla'
 app.use(cors({credentials:true,origin:"http://localhost:3000"}));
@@ -85,7 +85,11 @@ app.post('/logout', (req,res) => {
   res.cookie('token', '').json('ok');
 });
 app.post('/post',uploadMiddleware.single('file'),(req,res)=>{
-  res.json(req.files)
+  const {originalname,path} = req.file
+  const parts = originalname.split('.')
+  const extension = parts[parts.length-1]
+  fs.renameSync(path,path+"."+extension)
+  res.json({extension})
 })
 connectdb()
 app.listen(4000,()=>{
