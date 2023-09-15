@@ -17,6 +17,7 @@ app.use(cors({credentials:true,origin:"http://localhost:3000"}));
 
 app.use(cookieParser())
 app.use(express.json());
+app.use('/uploads',express.static(__dirname + '/uploads'))
 
 app.post('/register', async(req,res)=>{
     const {username,email,password} = req.body
@@ -91,15 +92,29 @@ app.post('/post',uploadMiddleware.single('file'),async(req,res)=>{
   const extension = parts[parts.length-1]
   const newPath = path+"."+extension
   fs.renameSync(path,newPath)
-
-  const {title,summary,content} = req.body
- const post = await Post.create({
+  const {token} = req.cookies;
+  jwt.verify(token, secret, {}, async(err,info) => {
+    if (err) throw err;
+    const {title,summary,content} = req.body
+  const post = await Post.create({
   title,
   summary,
   content,
-  cover:newPath
+  cover:newPath,
+  author:info.id
  })
-  res.json([post])
+ res.json([post])
+  });
+  
+ 
+})
+app.get('/post',async(req,res)=>{
+const posts = await Post.find()
+              .populate('author',['username'])
+              .sort({createdAt:-1})
+              .limit(20)
+
+  res.json(posts)
 })
 connectdb()
 app.listen(4000,()=>{
