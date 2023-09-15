@@ -116,6 +116,11 @@ const posts = await Post.find()
 
   res.json(posts)
 })
+app.get('/post/:id', async(req,res)=>{
+    const {id} = req.params
+    const post = await Post.findById(id).populate('author',['username'])
+    res.json(post)
+})
 connectdb()
 app.listen(4000,()=>{
     console.log('App is running at port 4000')
