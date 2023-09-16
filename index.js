@@ -119,13 +119,7 @@ app.put('/post', uploadMiddleware.single('file'), async (req, res) => {
     const extension = parts[parts.length - 1];
     const newPath = path + '.' + extension;
     fs.renameSync(path, newPath);
-  } 
-  else {
-    console.log('No file uploaded');
-    res.status(400).json({ error: 'No file uploaded' });
-  }
-  const { token } = req.cookies;
-
+    const { token } = req.cookies;
   jwt.verify(token, secret, {}, async (err, info) => {
     if (err) {
       return res.status(401).json({ error: 'Unauthorized' });
@@ -159,6 +153,8 @@ app.put('/post', uploadMiddleware.single('file'), async (req, res) => {
 
     res.json(updatedPost);
   });
+  } 
+  
 });
 
 
