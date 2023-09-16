@@ -87,11 +87,13 @@ app.post('/logout', (req,res) => {
   res.cookie('token', '').json('ok');
 });
 app.post('/post',uploadMiddleware.single('file'),async(req,res)=>{
-  const {originalname,path} = req.file
-  const parts = originalname.split('.')
-  const extension = parts[parts.length-1]
-  const newPath = path+"."+extension
-  fs.renameSync(path,newPath)
+  if(req.file){
+    const {originalname,path} = req.file
+    const parts = originalname.split('.')
+    const extension = parts[parts.length-1]
+    const newPath = path+"."+extension
+    fs.renameSync(path,newPath)
+ 
   const {token} = req.cookies;
   jwt.verify(token, secret, {}, async(err,info) => {
     if (err) throw err;
@@ -102,12 +104,65 @@ app.post('/post',uploadMiddleware.single('file'),async(req,res)=>{
   content,
   cover:newPath,
   author:info.id
- })
+ }) 
  res.json([post])
-  });
-  
- 
+  }); }
+  else{
+    res.status(400).json()
+  }
 })
+app.put('/post', uploadMiddleware.single('file'), async (req, res) => {
+  // Check if a file was uploaded successfully
+  if (req.file) {
+    const { originalname, path } = req.file;
+    const parts = originalname.split('.');
+    const extension = parts[parts.length - 1];
+    const newPath = path + '.' + extension;
+    fs.renameSync(path, newPath);
+  } 
+  else {
+    console.log('No file uploaded');
+    res.status(400).json({ error: 'No file uploaded' });
+  }
+  const { token } = req.cookies;
+
+  jwt.verify(token, secret, {}, async (err, info) => {
+    if (err) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    const { id, title, summary, content } = req.body;
+
+    const post = await Post.findById(id);
+
+    if (!post) {
+      return res.status(404).json({ error: 'Post not found' });
+    }
+
+    const isAuthor = JSON.stringify(post.author) === JSON.stringify(info.id);
+
+    if (!isAuthor) {
+      return res.status(403).json({ error: 'You are not the author of this post' });
+    }
+
+    // Update the post using findByIdAndUpdate
+    const updatedPost = await Post.findByIdAndUpdate(
+      id,
+      {
+        title,
+        summary,
+        content,
+        cover: newPath || post.cover,
+      },
+      { new: true } // To return the updated post
+    );
+
+    res.json(updatedPost);
+  });
+});
+
+
+ ;
 app.get('/post',async(req,res)=>{
 const posts = await Post.find()
               .populate('author',['username'])
