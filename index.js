@@ -86,40 +86,58 @@ app.get('/profile', (req,res) => {
 app.post('/logout', (req,res) => {
   res.cookie('token', '').json('ok');
 });
-app.post('/post',uploadMiddleware.single('file'),async(req,res)=>{
-  if(req.file){
-    const {originalname,path} = req.file
-    const parts = originalname.split('.')
-    const extension = parts[parts.length-1]
-    const newPath = path+"."+extension
-    fs.renameSync(path,newPath)
- 
-  const {token} = req.cookies;
-  jwt.verify(token, secret, {}, async(err,info) => {
-    if (err) throw err;
-    const {title,summary,content} = req.body
-  const post = await Post.create({
-  title,
-  summary,
-  content,
-  cover:newPath,
-  author:info.id
- }) 
- res.json([post])
-  }); }
-  else{
-    res.status(400).json()
+app.post('/post', uploadMiddleware.single('file'), async (req, res) => {
+  let newPath = null;
+
+  if (req.file) {
+    const { originalname, path } = req.file;
+    const parts = originalname.split('.');
+    const extension = parts[parts.length - 1];
+    newPath = path + '.' + extension;
+    fs.renameSync(path, newPath);
+  } else {
+    return res.status(400).json({ error: 'No file uploaded' });
   }
-})
+
+  const { token } = req.cookies;
+  jwt.verify(token, secret, {}, async (err, info) => {
+    if (err) {
+      console.error(err);
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    const { title, summary, content } = req.body;
+
+    try {
+      const post = await Post.create({
+        title,
+        summary,
+        content,
+        cover: newPath,
+        author: info.id,
+      });
+
+      res.json([post]);
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: 'An error occurred while creating the post' });
+    }
+  });
+});
+
 app.put('/post', uploadMiddleware.single('file'), async (req, res) => {
   // Check if a file was uploaded successfully
+  let newPath = null
   if (req.file) {
     const { originalname, path } = req.file;
     const parts = originalname.split('.');
     const extension = parts[parts.length - 1];
     const newPath = path + '.' + extension;
     fs.renameSync(path, newPath);
-    const { token } = req.cookies;
+   
+ 
+  } 
+  const { token } = req.cookies;
   jwt.verify(token, secret, {}, async (err, info) => {
     if (err) {
       return res.status(401).json({ error: 'Unauthorized' });
@@ -153,8 +171,6 @@ app.put('/post', uploadMiddleware.single('file'), async (req, res) => {
 
     res.json(updatedPost);
   });
-  } 
-  
 });
 
 
@@ -167,11 +183,21 @@ const posts = await Post.find()
 
   res.json(posts)
 })
-app.get('/post/:id', async(req,res)=>{
-    const {id} = req.params
-    const post = await Post.findById(id).populate('author',['username'])
-    res.json(post)
-})
+app.get('/post/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const post = await Post.findById(id).populate('author', ['username']);
+    if (!post) {
+      return res.status(404).json({ error: 'Post not found' });
+    }
+
+    res.json(post);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'An error occurred while fetching the post' });
+  }
+});
+
 connectdb()
 app.listen(4000,()=>{
     console.log('App is running at port 4000')
