@@ -13,7 +13,7 @@ const  uploadMiddleware = multer({dest:'uploads/'})
 const fs = require('fs')
 const salt = bcrypt.genSaltSync(10)
 const secret ='jf803u4dj02948jkfaalrla'
-app.use(cors({ credentials: true, origin: "https://blog-client-two-orpin.vercel.app" }));
+app.use(cors({ credentials: true, origin: "https://blog-nwgsiqhy2-shafiaansar.vercel.app" }));
 
 
 app.use(cookieParser())
