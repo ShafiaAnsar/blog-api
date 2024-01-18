@@ -105,5 +105,4 @@ connectdb()
 app.listen(4000,()=>{
     console.log('App is running at port 4000')
 })
-// mooongodb:
-// password:t8jhVJGZKQzAvOzd
+
